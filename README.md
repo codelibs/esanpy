@@ -4,9 +4,7 @@ Esanpy is Python text analyzer based on Elasticsearch.
 Using embedded Elasticsearch, Esanpy provides powerful and fully-customizable text analysis.
 Since Esanpy manages Elasticsearch instance internally, you do not need to install/configure Elasticsearch.
 
-## Getting Started
-
-### Install gym-starter-kit
+## Install Esanpy
 
     $ pip install esanpy
 
@@ -16,9 +14,23 @@ If you want to install development version, run as below:
     $ cd esanpy
     $ pip install .
 
-### Python
+## Python
 
-TBD
+### Start Server
+
+```
+import esanpy
+
+esanpy.start_server()
+```
+
+### Stop Server
+
+```
+import esanpy
+
+esanpy.stop_server()
+```
 
 ### Command
 
