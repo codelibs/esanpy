@@ -2,9 +2,11 @@
 
 from setuptools import setup
 
+VERSION = "0.1.0.dev1"
+
 setup(
     name="esanpy",
-    version="0.0.1",
+    version=VERSION,
     packages=['esanpy'],
     author="CodeLibs",
     author_email="dev@codelibs.org",
@@ -12,7 +14,7 @@ setup(
     description=("Elasticsearch based Text Analyzer."),
     keywords="text analyzer",
     url="https://github.com/codelibs/esanpy",
-    download_url='https://github.com/codelibs/esanpy/tarball/0.0.1',
+    download_url='https://github.com/codelibs/esanpy/tarball/' + VERSION,
     classifiers=[
         "Programming Language :: Python :: 3",
         "Development Status :: 2 - Pre-Alpha",
