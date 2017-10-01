@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="esanpy",
-    version="0.0.1.dev1",
+    version="0.0.1",
     packages=['esanpy'],
     author="CodeLibs",
     author_email="dev@codelibs.org",
