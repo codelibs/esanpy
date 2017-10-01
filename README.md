@@ -26,7 +26,7 @@ import esanpy
 
 To access to Elasticsearch, use `start_server` function.
 This function downloads/configures embedded elasticsearch and plugins, and then start Elasticsearch instance.
-The embedded elasticsearch is saved in `~/.esanpy` directory.
+The elasticsearch is saved in `~/.esanpy` directory.
 If they are configured, this function just start elasticsearch instance.
 
 ```
@@ -38,17 +38,27 @@ esanpy.start_server()
 Esanpy provides `analyzer` and `custom_analyzer` function.
 
 ```
-tokens = analyzer("This is a pen.")
+tokens = esanpy.analyzer("This is a pen.")
 # tokens = ["this", "is", "a", "pen"]
 ```
 
+To use other analyzer, set an analyzer name with `analyzer`.
+
+```
+tokens = esanpy.analyzer("今日の天気は晴れです。", analyzer="koromoji")
+```
+
 ### Stop Server
+
+To stop Elasticsearch, use `stop_server()`.
 
 ```
 esanpy.stop_server()
 ```
 
-### Command
+## Command
+
+Esanpy provides `esanpy` command.
 
 ```
 $ esanpy --text "This is a pen."
@@ -58,10 +68,21 @@ a
 pen
 ```
 
+`esanpy` starts Elasticsearch if it does not run.
+So, it takes time to start it, but it will be fast after that because Elasticsearch instance is reused.
+
+To change analyzer, use `--analyzer` option.
+
 ```
 $ esanpy --text 今日の天気は晴れです。 --analyzer kuromoji
 今日
 天気
 晴れ
+```
+
+`--stop` opition stops Elasticsearch instance on the command exit.
+
+```
+$ esanpy --text "This is a pen." --stop
 ```
 
