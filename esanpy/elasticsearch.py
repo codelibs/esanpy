@@ -15,6 +15,7 @@ from esanpy.core import EsAnalyzerSetupError, EsanpyInvalidArgumentError, \
     EsanpyIndexExistError, EsanpyServerError
 from esanpy.core import IVY_VERSION, ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME, \
     DEFAULT_HTTP_PORT, DEFAULT_TRANSPORT_PORT, DEFAULT_PLUGINS
+from urllib.error import HTTPError
 
 
 try:
@@ -205,14 +206,20 @@ def stop_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
                 logger.error('Failed to stop Elasticsearch process')
 
 
-def create_analysis(index_name, analyzer={}, tokenizer={}, token_filter={}, char_filter={},
+def create_analysis(namespace, analyzer={}, tokenizer={}, token_filter={}, char_filter={},
                     host='localhost', http_port=DEFAULT_HTTP_PORT):
-    url = 'http://' + host + ':' + str(http_port) + '/' + index_name
+    url = 'http://' + host + ':' + str(http_port) + '/' + namespace
     req = Request(url, method='HEAD')
     req.add_header('Content-Type', 'application/json')
-    with urlopen(req) as response:
-        if response.code == 200:
-            raise EsanpyIndexExistError('{} exists'.format(index_name))
+    try:
+        with urlopen(req) as response:
+            if response.code == 200:
+                return False
+    except HTTPError as e:
+        if e.code == 404:
+            logger.debug('Index does not exist: ' + str(e))
+        else:
+            raise e
 
     data = {
         "settings": {
@@ -233,31 +240,41 @@ def create_analysis(index_name, analyzer={}, tokenizer={}, token_filter={}, char
     req.add_header('Content-Type', 'application/json')
     with urlopen(req, json.dumps(data).encode('utf-8')) as response:
         logger.debug(response.read().decode())
+    return True
 
 
-def get_analysis(index_name,
+def get_analysis(namespace,
                  host='localhost', http_port=DEFAULT_HTTP_PORT):
-    url = 'http://' + host + ':' + str(http_port) + '/' + index_name
+    url = 'http://' + host + ':' + str(http_port) + '/' + namespace
     req = Request(url, method='GET')
     req.add_header('Content-Type', 'application/json')
-    with urlopen(req) as response:
-        if response.code == 200:
-            result = json.loads(response.read().decode())
-            index_obj = result.get(index_name)
-            if index_obj is None:
-                return None
-            settings_obj = index_obj.get('settings')
-            if settings_obj is None:
-                return None
-            return index_obj.get('analysis')
+    try:
+        with urlopen(req) as response:
+            if response.code == 200:
+                result = json.loads(response.read().decode())
+                namespace_obj = result.get(namespace)
+                if namespace_obj is None:
+                    return None
+                settings_obj = namespace_obj.get('settings')
+                if settings_obj is None:
+                    return None
+                index_obj = settings_obj.get('index')
+                if index_obj is None:
+                    return None
+                return index_obj.get('analysis')
+    except HTTPError as e:
+        if e.code == 404:
+            logger.debug('Index does not exist: ' + str(e))
+        else:
+            raise e
     return None
 
 
-def delete_analysis(index_name,
+def delete_analysis(namespace,
                     host='localhost', http_port=DEFAULT_HTTP_PORT):
-    url = 'http://' + host + ':' + str(http_port) + '/' + index_name
+    url = 'http://' + host + ':' + str(http_port) + '/' + namespace
     req = Request(url, method='DELETE')
     req.add_header('Content-Type', 'application/json')
     with urlopen(req) as response:
         if response.code != 200:
-            raise EsanpyServerError('Failed to delete ' + index_name)
+            raise EsanpyServerError('Failed to delete ' + namespace)

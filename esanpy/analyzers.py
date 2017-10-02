@@ -17,17 +17,18 @@ except ImportError:
 logger = getLogger('esanpy')
 
 
-def analyzer(text, analyzer='standard', index=None,
+def analyzer(text, analyzer='standard', namespace=None,
              host='localhost', http_port=DEFAULT_HTTP_PORT):
     if text is None:
         return []
     data = {'analyzer': analyzer, 'text': text}
-    url_suffix = '/_analyze' if index is None else '/' + index + '/_analyze'
+    url_suffix = '/_analyze' if namespace is None else '/' + namespace + '/_analyze'
     return send_analyze_request('http://' + host + ':' + str(http_port) + url_suffix,
                                 data)
 
 
-def custom_analyzer(text, tokenizer='keyword', token_filter=[], char_filter=[],
+def custom_analyzer(text, namespace=None,
+                    tokenizer='keyword', token_filter=[], char_filter=[],
                     host='localhost', http_port=DEFAULT_HTTP_PORT):
     if text is None:
         return []
@@ -35,7 +36,8 @@ def custom_analyzer(text, tokenizer='keyword', token_filter=[], char_filter=[],
             "filter": token_filter,
             "char_filter": char_filter,
             "text": text}
-    return send_analyze_request('http://' + host + ':' + str(http_port) + '/_analyze',
+    url_suffix = '/_analyze' if namespace is None else '/' + namespace + '/_analyze'
+    return send_analyze_request('http://' + host + ':' + str(http_port) + url_suffix,
                                 data)
 
 

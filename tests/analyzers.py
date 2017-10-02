@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 
+from logging import getLogger
 import unittest
+
 import esanpy
 
-class ElasticsearchTest(unittest.TestCase):
+
+class AnalyzerTest(unittest.TestCase):
 
     def setUp(self):
+        getLogger('esanpy').setLevel(10)
         esanpy.start_server()
 
     def tearDown(self):
@@ -39,6 +43,7 @@ class ElasticsearchTest(unittest.TestCase):
                                                       {"type": "stop", "stopwords": ["a", "is", "this"]}],
                                         char_filter=[])
         self.assertEqual(result, ['test'])
+
 
 if __name__ == "__main__":
     unittest.main()

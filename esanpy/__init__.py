@@ -13,14 +13,13 @@ from esanpy.core import ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME, DEFAULT_HTTP_POR
 
 start_server = elasticsearch.start_server
 stop_server = elasticsearch.stop_server
+create_analysis = elasticsearch.create_analysis
+get_analysis = elasticsearch.get_analysis
+delete_analysis = elasticsearch.delete_analysis
 analyzer = analyzers.analyzer
 custom_analyzer = analyzers.custom_analyzer
 
 logger = getLogger('esanpy')
-
-
-class EsanpyError(Exception):
-    pass
 
 
 def parse_args(args):
