@@ -4,25 +4,31 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 import glob
 import json
 from logging import getLogger
+import multiprocessing
 import os
 import signal
 import subprocess
 import time
 import zipfile
 
-from esanpy.core import EsAnalyzerSetupError, EsanpyInvalidArgumentError
-from esanpy.core import IVY_VERSION, ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME,\
+from esanpy.core import EsAnalyzerSetupError, EsanpyInvalidArgumentError, \
+    EsanpyIndexExistError, EsanpyServerError
+from esanpy.core import IVY_VERSION, ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME, \
     DEFAULT_HTTP_PORT, DEFAULT_TRANSPORT_PORT, DEFAULT_PLUGINS
+
+
+try:
+    from urllib.request import Request
+except ImportError:
+    from urllib2 import Request
 
 
 try:
     from urllib.request import urlretrieve
     from urllib.request import urlopen
-    from urllib.error import URLError
 except ImportError:
     from urllib import urlretrieve
     from urllib2 import urlopen
-    from urllib2.error import URLError
 
 logger = getLogger('esanpy')
 
@@ -197,3 +203,61 @@ def stop_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
                 os.kill(int(pid), signal.SIGKILL)
             except Exception:
                 logger.error('Failed to stop Elasticsearch process')
+
+
+def create_analysis(index_name, analyzer={}, tokenizer={}, token_filter={}, char_filter={},
+                    host='localhost', http_port=DEFAULT_HTTP_PORT):
+    url = 'http://' + host + ':' + str(http_port) + '/' + index_name
+    req = Request(url, method='HEAD')
+    req.add_header('Content-Type', 'application/json')
+    with urlopen(req) as response:
+        if response.code == 200:
+            raise EsanpyIndexExistError('{} exists'.format(index_name))
+
+    data = {
+        "settings": {
+            "index": {
+                "refresh_interval": -1,
+                "number_of_replicas": 0,
+                "number_of_shards": multiprocessing.cpu_count(),
+                "analysis": {
+                    "filter": token_filter,
+                    "char_filter": char_filter,
+                    "analyzer": analyzer,
+                    "tokenizer": tokenizer
+                }
+            }
+        }
+    }
+    req = Request(url, method='PUT')
+    req.add_header('Content-Type', 'application/json')
+    with urlopen(req, json.dumps(data).encode('utf-8')) as response:
+        logger.debug(response.read().decode())
+
+
+def get_analysis(index_name,
+                 host='localhost', http_port=DEFAULT_HTTP_PORT):
+    url = 'http://' + host + ':' + str(http_port) + '/' + index_name
+    req = Request(url, method='GET')
+    req.add_header('Content-Type', 'application/json')
+    with urlopen(req) as response:
+        if response.code == 200:
+            result = json.loads(response.read().decode())
+            index_obj = result.get(index_name)
+            if index_obj is None:
+                return None
+            settings_obj = index_obj.get('settings')
+            if settings_obj is None:
+                return None
+            return index_obj.get('analysis')
+    return None
+
+
+def delete_analysis(index_name,
+                    host='localhost', http_port=DEFAULT_HTTP_PORT):
+    url = 'http://' + host + ':' + str(http_port) + '/' + index_name
+    req = Request(url, method='DELETE')
+    req.add_header('Content-Type', 'application/json')
+    with urlopen(req) as response:
+        if response.code != 200:
+            raise EsanpyServerError('Failed to delete ' + index_name)

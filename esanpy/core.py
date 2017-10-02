@@ -25,3 +25,11 @@ class EsAnalyzerSetupError(EsanpyError):
 
 class EsanpyInvalidArgumentError(EsanpyError):
     pass
+
+
+class EsanpyIndexExistError(EsanpyError):
+    pass
+
+
+class EsanpyServerError(EsanpyError):
+    pass
