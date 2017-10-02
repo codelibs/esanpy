@@ -140,8 +140,8 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
         with urlopen('http://' + host + ':' + str(http_port)) as response:
             logger.debug(json.loads(response.read().decode()))
             return
-    except URLError as e:
-        logger.debug('Elasticsearch is not working: ' + str(e.reason))
+    except OSError as e:
+        logger.debug('Elasticsearch is not working: ' + str(e))
 
     setup_esanalyzer(esrunner_version, http_port, plugin_names)
     stop_server(host=host, http_port=http_port, esrunner_version=esrunner_version)

@@ -1,0 +1,25 @@
+language: python
+
+jdk:
+  - oraclejdk8
+
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+
+install:
+  - pip install tox tox-travis
+  - pip install coverage coveralls
+
+before_script:
+  - java -version
+
+script:
+  - tox -r
+
