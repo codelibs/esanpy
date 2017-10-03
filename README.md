@@ -1,8 +1,8 @@
 # Esanpy: Elasticsearch based Analyzer for Python [![Build Status](https://travis-ci.org/codelibs/esanpy.svg?branch=master)](https://travis-ci.org/codelibs/esanpy)
 
 Esanpy is Python Text Analyzer based on Elasticsearch.
-Using embedded Elasticsearch, Esanpy provides powerful and fully-customizable text analysis.
-Since Esanpy manages Elasticsearch instance internally, you do not need to install/configure Elasticsearch.
+Using Elasticsearch, Esanpy provides powerful and fully-customizable text analysis.
+Since Esanpy manages Elasticsearch instance internally, you DO NOT need to install/configure Elasticsearch.
 
 ## Install Esanpy
 
