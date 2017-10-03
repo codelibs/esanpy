@@ -154,5 +154,17 @@ To delete namespace, use `delete_analysis`:
 esanpy.delete_analysis('my_analyzers')
 ```
 
+### Uninstall Esanpy
 
+To remove Esanpy, check/kill processes:
 
+```
+$ ps aux | grep esanpy
+$ kill [above PIDs]
+```
+
+and then remove `~/.esanpy` directory:
+
+```
+$ rm -rf ~/.esanpy
+```
