@@ -8,7 +8,8 @@ import sys
 
 from esanpy import analyzers
 from esanpy import elasticsearch
-from esanpy.core import ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME, DEFAULT_HTTP_PORT, DEFAULT_TRANSPORT_PORT
+from esanpy.core import ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME, DEFAULT_HTTP_PORT, DEFAULT_TRANSPORT_PORT,\
+    DEFAULT_PLUGINS
 
 
 start_server = elasticsearch.start_server
@@ -37,6 +38,7 @@ def parse_args(args):
     parser.add_argument('--analyzer-name', dest='analyzer_name', action='store',
                         default='standard', help='Analyzer name')
     parser.add_argument('--text', dest='text', action='store', help='Text to analyze')
+    parser.add_argument('--plugin', dest='plugins', action='append', help='Plugins to install')
     parser.add_argument('--verbose', '-v', dest='verbose', action='store_true',
                         default=False, help='Display debug messages')
     parser.add_argument('--stop', dest='stop', action='store_true',
@@ -60,10 +62,12 @@ def main(args=None):
 
     configure_logging(options)
 
+    plugin_names = DEFAULT_PLUGINS if options.plugins is None else options.plugins
     start_server(host=options.host,
                  http_port=options.http_port,
                  transport_port=options.transport_port,
                  cluster_name=options.cluster_name,
+                 plugin_names=plugin_names,
                  esrunner_version=options.esrunner_version)
 
     tokens = analyzer(options.text,

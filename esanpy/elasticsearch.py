@@ -111,7 +111,7 @@ def install_plugin(plugin_name, http_port=DEFAULT_HTTP_PORT, esrunner_version=ES
         values = plugin_name.split(':')
         if len(values) != 3:
             raise EsanpyInvalidArgumentError("Unknown plugin name: " + plugin_name)
-        url = "https://repo1.maven.org/maven2/{}/{}/{}/{}-{}.zip".format(values[0],
+        url = "https://repo1.maven.org/maven2/{}/{}/{}/{}-{}.zip".format(values[0].replace('.', '/'),
                                                                          values[1],
                                                                          values[2],
                                                                          values[1],
