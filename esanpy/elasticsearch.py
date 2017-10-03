@@ -12,8 +12,8 @@ import subprocess
 import time
 import zipfile
 
-from esanpy.core import EsAnalyzerSetupError, EsanpyInvalidArgumentError, \
-    EsanpyServerError
+from esanpy.core import EsanpySetupError, EsanpyInvalidArgumentError, \
+    EsanpyServerError, EsanpyStartupError
 from esanpy.core import IVY_VERSION, ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME, \
     DEFAULT_HTTP_PORT, DEFAULT_TRANSPORT_PORT, DEFAULT_PLUGINS
 
@@ -87,7 +87,7 @@ def setup_esanalyzer(esrunner_version=ESRUNNER_VERSION, http_port=DEFAULT_HTTP_P
                              cwd=esrunner_home)
         p.wait()
         if p.returncode != 0:
-            raise EsAnalyzerSetupError('Failed to download jar files. exit code: ' + str(p.returncode))
+            raise EsanpySetupError('Failed to download jar files. exit code: ' + str(p.returncode))
 
         # workaround
         removed_files = []
@@ -159,13 +159,14 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
     stop_server(host=host, http_port=http_port, esrunner_version=esrunner_version)
 
     esrunner_home = get_esrunner_home(esrunner_version)
+    es_home = esrunner_home + '/es_home_' + str(http_port)
     esrunner_args = ['java',
                      '-Xmx256m',
                      '-cp',
                      get_esrunner_classpath(esrunner_version),
                      "org.codelibs.elasticsearch.runner.ElasticsearchClusterRunner",
                      '-basePath',
-                     esrunner_home + '/es_home_' + str(http_port),
+                     es_home,
                      '-numOfNode',
                      '1',
                      '-clusterName',
@@ -196,6 +197,10 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
                 return
         except Exception as e:
             logger.debug('Elasticsearch is not available: ' + str(e))
+
+    if os.path.exists(pid_file):
+        os.remove(pid_file)
+    raise EsanpyStartupError('Failed to start Elasticsearch. See ' + es_home + '/logs/node_1/esanpy.log')
 
 
 def stop_server(host='localhost', http_port=DEFAULT_HTTP_PORT,

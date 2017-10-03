@@ -19,7 +19,11 @@ class EsanpyError(Exception):
     pass
 
 
-class EsAnalyzerSetupError(EsanpyError):
+class EsanpySetupError(EsanpyError):
+    pass
+
+
+class EsanpyStartupError(EsanpyError):
     pass
 
 
