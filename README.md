@@ -1,4 +1,4 @@
-# Esanpy: Elasticsearch based Analyzer for Python
+# Esanpy: Elasticsearch based Analyzer for Python [![Build Status](https://travis-ci.org/codelibs/esanpy.svg?branch=master)](https://travis-ci.org/codelibs/esanpy)
 
 Esanpy is Python Text Analyzer based on Elasticsearch.
 Using embedded Elasticsearch, Esanpy provides powerful and fully-customizable text analysis.
@@ -48,6 +48,17 @@ To use other analyzer, set an analyzer name with `analyzer`.
 tokens = esanpy.analyzer("今日の天気は晴れです。", analyzer="koromoji")
 ```
 
+`custom_analyzer` has `tokenizer`, `token_filter` and `char_filter` as arguments.
+
+```
+tokens = esanpy.custom_analyzer('this is a <b>test</b>',
+                                tokenizer="keyword",
+                                token_filter=["lowercase"],
+                                char_filter=["html_strip"])
+```
+
+For Elasticsearch Analyze API, see [Analyze](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-analyze.html).
+
 ### Stop Server
 
 To stop Elasticsearch, use `stop_server()`.
@@ -85,4 +96,63 @@ $ esanpy --text 今日の天気は晴れです。 --analyzer kuromoji
 ```
 $ esanpy --text "This is a pen." --stop
 ```
+
+## Advance Usecases
+
+### Register Analyzer
+
+You can register own analyzers by `create_analysis`.
+To register analyzers with `my_analyzers` namespace:
+
+```
+esanpy.create_analysis('my_analyzers',
+                       char_filter={
+                           "mapping_ja_filter": {
+                               "type": "mapping",
+                               "mappings_path": mapping_file
+                               }
+                       },
+                       tokenizer={
+                           "kuromoji_user_dict": {
+                               "type": "kuromoji_tokenizer",
+                               "mode": "normal",
+                               "user_dictionary": userdict_file,
+                               "discard_punctuation": False
+                               }
+                       },
+                       token_filter={
+                           "ja_stopword": {
+                               "type": "ja_stop",
+                               "stopwords": [
+                                   "行く"
+                                   ]
+                               }
+                       },
+                       analyzer={
+                           "kuromoji_analyzer": {
+                               "type": "custom",
+                               "char_filter": ["mapping_ja_filter"],
+                               "tokenizer": "kuromoji_user_dict",
+                               "filter": ["ja_stopword"]
+                               }
+                       }
+                       )
+```
+
+To use kuromoji_analyzer, invoke `analyzer` with a namespace and analyzer:
+
+```
+tokens = esanpy.analyzer('①東京スカイツリーに行く',
+                         analyzer="kuromoji_analyzer",
+                         namespace='my_analyzers')
+# tokens = ['1', '東京スカイツリー', 'に']
+```
+
+To delete namespace, use `delete_analysis`:
+
+```
+esanpy.delete_analysis('my_analyzers')
+```
+
+
 
