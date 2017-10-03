@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+from contextlib import closing
 import glob
 import json
 from logging import getLogger
@@ -12,24 +13,27 @@ import time
 import zipfile
 
 from esanpy.core import EsAnalyzerSetupError, EsanpyInvalidArgumentError, \
-    EsanpyIndexExistError, EsanpyServerError
+    EsanpyServerError
 from esanpy.core import IVY_VERSION, ESRUNNER_VERSION, DEFAULT_CLUSTER_NAME, \
     DEFAULT_HTTP_PORT, DEFAULT_TRANSPORT_PORT, DEFAULT_PLUGINS
-from urllib.error import HTTPError
 
 
 try:
     from urllib.request import Request
-except ImportError:
-    from urllib2 import Request
-
-
-try:
     from urllib.request import urlretrieve
     from urllib.request import urlopen
+    from urllib.error import HTTPError
 except ImportError:
+    from urllib2 import Request
     from urllib import urlretrieve
     from urllib2 import urlopen
+    from urllib2 import HTTPError
+
+try:
+    from subprocess import DEVNULL
+except ImportError:
+    import os
+    DEVNULL = open(os.devnull, 'wb')
 
 logger = getLogger('esanpy')
 
@@ -78,8 +82,8 @@ def setup_esanalyzer(esrunner_version=ESRUNNER_VERSION, http_port=DEFAULT_HTTP_P
                               ESRUNNER_VERSION,
                               "-retrieve",
                               "lib/[artifact]-[revision](-[classifier]).[ext]"],
-                             stdout=subprocess.DEVNULL if logger.level != 10 else None,
-                             stderr=subprocess.DEVNULL if logger.level != 10 else None,
+                             stdout=DEVNULL if logger.level != 10 else None,
+                             stderr=DEVNULL if logger.level != 10 else None,
                              cwd=esrunner_home)
         p.wait()
         if p.returncode != 0:
@@ -144,10 +148,11 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
                  plugin_names=DEFAULT_PLUGINS,
                  esrunner_version=ESRUNNER_VERSION):
     try:
-        with urlopen('http://' + host + ':' + str(http_port)) as response:
-            logger.debug(json.loads(response.read().decode()))
+        with closing(urlopen('http://' + host + ':' + str(http_port))) as response:
+            if logger.isEnabledFor(10):
+                logger.debug(json.loads(response.read().decode('utf-8')))
             return
-    except OSError as e:
+    except Exception as e:
         logger.debug('Elasticsearch is not working: ' + str(e))
 
     setup_esanalyzer(esrunner_version, http_port, plugin_names)
@@ -172,8 +177,8 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
 
     logger.debug(' '.join(esrunner_args))
     p = subprocess.Popen(esrunner_args,
-                         stdout=subprocess.DEVNULL if logger.level != 10 else None,
-                         stderr=subprocess.DEVNULL if logger.level != 10 else None,
+                         stdout=DEVNULL if logger.level != 10 else None,
+                         stderr=DEVNULL if logger.level != 10 else None,
                          cwd=esrunner_home)
 
     pid_file = esrunner_home + "/" + str(http_port) + ".pid"
@@ -182,13 +187,15 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
 
     for i in range(30):
         time.sleep(1)
+        logger.debug('Checking Elasticsearch status: ' + str(i))
         try:
-            with urlopen('http://' + host + ':' + str(http_port) +
-                         '/_cluster/health?wait_for_status=yellow&timeout=1m') as response:
-                logger.debug(json.loads(response.read().decode()))
+            with closing(urlopen('http://' + host + ':' + str(http_port) +
+                         '/_cluster/health?wait_for_status=yellow&timeout=1m')) as response:
+                if logger.isEnabledFor(10):
+                    logger.debug(json.loads(response.read().decode('utf-8')))
                 return
-        except Exception:
-            logger.debug('Checking Elasticsearch status: ' + str(i))
+        except Exception as e:
+            logger.debug('Elasticsearch is not available: ' + str(e))
 
 
 def stop_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
@@ -202,17 +209,18 @@ def stop_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
         if len(pid) > 0:
             try:
                 os.kill(int(pid), signal.SIGKILL)
-            except Exception:
-                logger.error('Failed to stop Elasticsearch process')
+            except Exception as e:
+                logger.error('Failed to stop Elasticsearch process: ' + str(e))
 
 
 def create_analysis(namespace, analyzer={}, tokenizer={}, token_filter={}, char_filter={},
                     host='localhost', http_port=DEFAULT_HTTP_PORT):
     url = 'http://' + host + ':' + str(http_port) + '/' + namespace
-    req = Request(url, method='HEAD')
+    req = Request(url)
+    req.get_method = lambda: 'HEAD'
     req.add_header('Content-Type', 'application/json')
     try:
-        with urlopen(req) as response:
+        with closing(urlopen(req)) as response:
             if response.code == 200:
                 return False
     except HTTPError as e:
@@ -236,22 +244,24 @@ def create_analysis(namespace, analyzer={}, tokenizer={}, token_filter={}, char_
             }
         }
     }
-    req = Request(url, method='PUT')
+    req = Request(url)
+    req.get_method = lambda: 'PUT'
     req.add_header('Content-Type', 'application/json')
-    with urlopen(req, json.dumps(data).encode('utf-8')) as response:
-        logger.debug(response.read().decode())
+    with closing(urlopen(req, json.dumps(data).encode('utf-8'))) as response:
+        if logger.isEnabledFor(10):
+            logger.debug(response.read().decode('utf-8'))
     return True
 
 
 def get_analysis(namespace,
                  host='localhost', http_port=DEFAULT_HTTP_PORT):
     url = 'http://' + host + ':' + str(http_port) + '/' + namespace
-    req = Request(url, method='GET')
+    req = Request(url)
     req.add_header('Content-Type', 'application/json')
     try:
-        with urlopen(req) as response:
+        with closing(urlopen(req)) as response:
             if response.code == 200:
-                result = json.loads(response.read().decode())
+                result = json.loads(response.read().decode('utf-8'))
                 namespace_obj = result.get(namespace)
                 if namespace_obj is None:
                     return None
@@ -273,8 +283,9 @@ def get_analysis(namespace,
 def delete_analysis(namespace,
                     host='localhost', http_port=DEFAULT_HTTP_PORT):
     url = 'http://' + host + ':' + str(http_port) + '/' + namespace
-    req = Request(url, method='DELETE')
+    req = Request(url)
+    req.get_method = lambda: 'DELETE'
     req.add_header('Content-Type', 'application/json')
-    with urlopen(req) as response:
+    with closing(urlopen(req)) as response:
         if response.code != 200:
             raise EsanpyServerError('Failed to delete ' + namespace)

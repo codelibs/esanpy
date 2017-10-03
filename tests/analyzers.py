@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import division, print_function, absolute_import, unicode_literals
 
-from logging import getLogger
+from logging import getLogger, basicConfig
 import unittest
 
 import esanpy
@@ -9,6 +10,7 @@ import esanpy
 class AnalyzerTest(unittest.TestCase):
 
     def setUp(self):
+        basicConfig()
         getLogger('esanpy').setLevel(10)
         esanpy.start_server()
 

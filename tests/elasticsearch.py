@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from __future__ import division, print_function, absolute_import, unicode_literals
 
-from logging import getLogger
+from logging import getLogger, basicConfig
 import unittest
 import os
 
@@ -10,6 +11,7 @@ import esanpy
 class ElasticsearchTest(unittest.TestCase):
 
     def setUp(self):
+        basicConfig()
         getLogger('esanpy').setLevel(10)
         esanpy.start_server()
 
@@ -17,16 +19,8 @@ class ElasticsearchTest(unittest.TestCase):
         esanpy.stop_server()
 
     def test_analysis_case1(self):
-        mapping_file = os.path.abspath("case1_mapping_ja.txt")
-        userdict_file = os.path.abspath("case1_user-dict.txt")
-        with open(mapping_file, "wt") as f:
-            f.writelines([
-                "①=>1"
-                ])
-        with open(userdict_file, "wt") as f:
-            f.writelines([
-                "東京スカイツリー,東京スカイツリー,トウキョウスカイツリー,名詞-一般"
-                ])
+        mapping_file = os.path.abspath("tests/resources/case1_mapping_ja.txt")
+        userdict_file = os.path.abspath("tests/resources/case1_userdict.txt")
         esanpy.create_analysis('case1',
                                char_filter={
                                    "mapping_ja_filter": {
@@ -79,9 +73,6 @@ class ElasticsearchTest(unittest.TestCase):
 
         analysis = esanpy.get_analysis('case1')
         self.assertTrue(analysis is None, "analysis is None.")
-
-        os.remove(mapping_file)
-        os.remove(userdict_file)
 
 
 if __name__ == "__main__":

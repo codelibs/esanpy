@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, absolute_import, unicode_literals
 
+from contextlib import closing
 import json
 from logging import getLogger
 
@@ -44,6 +45,6 @@ def custom_analyzer(text, namespace=None,
 def send_analyze_request(url, data):
     req = Request(url)
     req.add_header('Content-Type', 'application/json')
-    with urlopen(req, json.dumps(data).encode('utf-8')) as response:
-        result = json.loads(response.read().decode())
+    with closing(urlopen(req, json.dumps(data).encode('utf-8'))) as response:
+        result = json.loads(response.read().decode('utf-8'))
         return [x.get('token') for x in result.get('tokens')]
