@@ -14,6 +14,11 @@ If you want to install development version, run as below:
     $ cd esanpy
     $ pip install .
 
+### Requirement
+
+* Python 2.7 or 3.4-3.6
+* Java 8 or above
+
 ## Python
 
 First of all, import esanpy module.
