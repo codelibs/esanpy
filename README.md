@@ -161,6 +161,24 @@ esanpy.delete_analysis('my_analyzers')
 
 For more information, see [Analysis](https://www.elastic.co/guide/en/elasticsearch/reference/5.6/analysis.html).
 
+### Use Kuromoji Neologd
+
+Installing analysis-kuromoji-neologd plugin, you can use Nelogd analyzer.
+To install it, use `--plugin` option.
+
+```
+$ esanpy --stop
+$ esanpy --plugin org.codelibs:elasticsearch-analysis-kuromoji-neologd:5.6.1
+```
+
+After installation, `kuromoji_neologd` analyzer is available.
+
+```
+$ esanpy --text 今日の天気は晴れです。 --analyzer kuromoji_neologd
+今日の天気
+晴れ
+```
+
 ### Uninstall Esanpy
 
 To remove Esanpy, check/kill processes:
