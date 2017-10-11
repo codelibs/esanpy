@@ -46,8 +46,12 @@ def get_esrunner_home(esrunner_version):
     return get_esanalyzer_home() + "/" + esrunner_version
 
 
+def get_es_home(http_port, esrunner_version):
+    return get_esrunner_home(esrunner_version) + '/es_home_' + str(http_port)
+
+
 def get_plugin_home(http_port, esrunner_version):
-    return get_esrunner_home(esrunner_version) + '/es_home_' + str(http_port) + "/plugins"
+    return get_es_home(http_port, esrunner_version) + "/plugins"
 
 
 def get_ivy_file():
@@ -159,7 +163,8 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
     stop_server(host=host, http_port=http_port, esrunner_version=esrunner_version)
 
     esrunner_home = get_esrunner_home(esrunner_version)
-    es_home = esrunner_home + '/es_home_' + str(http_port)
+    es_home = get_es_home(http_port, esrunner_version)
+    data_path = es_home +"/data/" + os.uname()[1]
     esrunner_args = ['java',
                      '-Xmx256m',
                      '-cp',
