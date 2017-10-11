@@ -6,6 +6,7 @@ import unittest
 import os
 
 import esanpy
+from esanpy.core import EsanpySetupError
 
 
 class ElasticsearchTest(unittest.TestCase):
@@ -73,6 +74,23 @@ class ElasticsearchTest(unittest.TestCase):
 
         analysis = esanpy.get_analysis('case1')
         self.assertTrue(analysis is None, "analysis is None.")
+
+    def test_analysis_case2(self):
+        try:
+            esanpy.create_analysis('case2',
+                                   analyzer={
+                                       "kuromoji_analyzer": {
+                                           "type": "custom",
+                                           "char_filter": ["xxx"],
+                                           "tokenizer": "xxx",
+                                           "filter": ["xxx"]
+                                           }
+                                   }
+                                   )
+            self.fail('EsanpySetupError should be thrown.')
+        except EsanpySetupError as e:
+            print(e)
+        esanpy.get_analysis('case2')
 
 
 if __name__ == "__main__":

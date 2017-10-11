@@ -32,7 +32,6 @@ except ImportError:
 try:
     from subprocess import DEVNULL
 except ImportError:
-    import os
     DEVNULL = open(os.devnull, 'wb')
 
 logger = getLogger('esanpy')
@@ -164,7 +163,7 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
 
     esrunner_home = get_esrunner_home(esrunner_version)
     es_home = get_es_home(http_port, esrunner_version)
-    data_path = es_home +"/data/" + os.uname()[1]
+    # data_path = es_home +"/data/" + os.uname()[1]
     esrunner_args = ['java',
                      '-Xmx256m',
                      '-cp',
@@ -237,7 +236,7 @@ def create_analysis(namespace, analyzer={}, tokenizer={}, token_filter={}, char_
         if e.code == 404:
             logger.debug('Index does not exist: ' + str(e))
         else:
-            raise e
+            raise EsanpySetupError('Failed to check ' + namespace + ' namespace: ' + e.read().decode('utf-8'))
 
     data = {
         "settings": {
@@ -257,9 +256,12 @@ def create_analysis(namespace, analyzer={}, tokenizer={}, token_filter={}, char_
     req = Request(url)
     req.get_method = lambda: 'PUT'
     req.add_header('Content-Type', 'application/json')
-    with closing(urlopen(req, json.dumps(data).encode('utf-8'))) as response:
-        if logger.isEnabledFor(10):
-            logger.debug(response.read().decode('utf-8'))
+    try:
+        with closing(urlopen(req, json.dumps(data).encode('utf-8'))) as response:
+            if logger.isEnabledFor(10):
+                logger.debug(response.read().decode('utf-8'))
+    except HTTPError as e:
+        raise EsanpySetupError('Failed to create ' + namespace + ' namespace: ' + e.read().decode('utf-8'))
     return True
 
 
@@ -286,7 +288,7 @@ def get_analysis(namespace,
         if e.code == 404:
             logger.debug('Index does not exist: ' + str(e))
         else:
-            raise e
+            raise EsanpySetupError('Failed to get ' + namespace + ' namespace: ' + e.read().decode('utf-8'))
     return None
 
 
