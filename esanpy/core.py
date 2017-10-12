@@ -3,7 +3,7 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 
 IVY_VERSION = "2.4.0"
-ESRUNNER_VERSION = "5.6.0.0"
+ESRUNNER_VERSION = "5.6.3.0"
 DEFAULT_HTTP_PORT = 9299
 DEFAULT_TRANSPORT_PORT = 9399
 DEFAULT_CLUSTER_NAME = 'esanpy'

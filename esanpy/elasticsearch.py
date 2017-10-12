@@ -163,7 +163,7 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
 
     esrunner_home = get_esrunner_home(esrunner_version)
     es_home = get_es_home(http_port, esrunner_version)
-    # data_path = es_home +"/data/" + os.uname()[1]
+    data_path = es_home + "/data/" + os.uname()[1]
     esrunner_args = ['java',
                      '-Xmx256m',
                      '-cp',
@@ -171,6 +171,8 @@ def start_server(host='localhost', http_port=DEFAULT_HTTP_PORT,
                      "org.codelibs.elasticsearch.runner.ElasticsearchClusterRunner",
                      '-basePath',
                      es_home,
+                     '-dataPath',
+                     data_path,
                      '-numOfNode',
                      '1',
                      '-clusterName',
