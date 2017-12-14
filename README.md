@@ -50,7 +50,7 @@ tokens = esanpy.analyzer("This is a pen.")
 To use other analyzer, set an analyzer name with `analyzer`.
 
 ```
-tokens = esanpy.analyzer("今日の天気は晴れです。", analyzer="koromoji")
+tokens = esanpy.analyzer("今日の天気は晴れです。", analyzer="kuromoji")
 ```
 
 `custom_analyzer` has `tokenizer`, `token_filter` and `char_filter` as arguments.
